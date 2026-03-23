@@ -6,8 +6,6 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class ScreenshotUtils {
 
@@ -18,8 +16,7 @@ public class ScreenshotUtils {
         new File(folderPath).mkdirs();
 
         // Add timestamp so screenshots don't overwrite each other
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String filePath = folderPath + "/" + stepName + "_" + timestamp + ".png";
+        String filePath = folderPath + "/" + stepName + ".png";
 
         // Take and save the screenshot
         File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);

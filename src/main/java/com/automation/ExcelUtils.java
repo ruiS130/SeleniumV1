@@ -35,6 +35,6 @@ public class ExcelUtils {
         return data;
     }
     public static String decodePassword(String encoded) {
-        return new String(Base64.getDecoder().decode(encoded));
+        return new String(Base64.getDecoder().decode(encoded.trim())).trim();
     }
 }
