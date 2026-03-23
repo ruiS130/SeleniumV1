@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Base64;
 
 public class ExcelUtils {
 
@@ -18,11 +19,11 @@ public class ExcelUtils {
         Workbook workbook = new XSSFWorkbook(file);
         Sheet sheet = workbook.getSheet(sheetName);
 
-        // Reads from Row 1 where actual data is
+        // Reads from Row 0 and Row 1, where actual data is
         Row headers = sheet.getRow(0);
         Row values = sheet.getRow(1);
 
-        // Using the for loop to store the row 0 as a key-value map
+        // Using the for loop to store the data read as a key-value map
         for(int i = 0; i < headers.getLastCellNum(); i++) {
             String key = headers.getCell(i).getStringCellValue();
             String value = values.getCell(i).getStringCellValue();
@@ -32,5 +33,8 @@ public class ExcelUtils {
         workbook.close();
         file.close();
         return data;
+    }
+    public static String decodePassword(String encoded) {
+        return new String(Base64.getDecoder().decode(encoded));
     }
 }
