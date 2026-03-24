@@ -26,8 +26,7 @@ public class Scenario1Test {
     public void setUp() throws Exception {
         // Read credentials from Excel
         testData = ExcelUtils.getTestData("testdata.xlsx", "Sheet1");
-        System.out.println("Decoded password: [" + ExcelUtils.decodePassword(testData.get("password")) + "]");
-        // TODO: Change pwd, and test decoding
+//        System.out.println("Decoded password: [" + ExcelUtils.decodePassword(testData.get("password")) + "]");
 
         // Configure Chrome to auto-save PDFs instead of showing print dialog
         ChromeOptions options = getChromeOptions();
@@ -76,35 +75,44 @@ public class Scenario1Test {
 
         // Step 3?: Wait for Duo
 //         Thread.sleep(30000); // 30 seconds to approve Duo on your phone
-
-        // Step 4: Wait for Duo - you manually press Enter here (2FA)
-        // Waiting up to 60 seconds for you to complete Duo authentication
+// Step 4: Wait for Duo approval, then click "No, other people use this device"
         wait = new WebDriverWait(driver, Duration.ofSeconds(60));
-        wait.until(ExpectedConditions.urlContains("me.northeastern.edu"));
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("dont-trust-browser-button"))).click();
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "04_after_duo");
 
-        // Reset wait back to 20 seconds
+        // Reset wait
         wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 
-        // Step 5: Click Student Hub
+        // Click "No" to stay signed in prompt
         wait.until(ExpectedConditions.elementToBeClickable(
-                By.linkText("Student Hub"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "05_student_hub");
+                By.id("idBtn_Back"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "04c_stay_signed_in_no");
 
-        // Step 6: Click Resources tab
+        // Step 5: Click Resources tab
         wait.until(ExpectedConditions.elementToBeClickable(
-                By.linkText("Resources"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "06_resources_tab");
+                By.cssSelector("[data-testid='link-resources']"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "05_resources_tab");
 
-        // Step 7: Go to Academics, Classes & Registration
-        wait.until(ExpectedConditions.elementToBeClickable(
-                By.linkText("Academics, Classes & Registration"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "07_academics");
+        // Step 6: Click Academics, Classes & Registration icon
+        WebElement academicsIcon = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("img[src*='academicsclassesregistration']")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", academicsIcon);
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "06_academics");
 
-        // Step 8: Click Unofficial Transcript
-        wait.until(ExpectedConditions.elementToBeClickable(
-                By.linkText("Unofficial Transcript"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "08_unofficial_transcript");
+        // Step 7: Dismiss cookie banner if present
+        try {
+            WebElement cookieBanner = driver.findElement(By.id("truste-consent-track"));
+            ((JavascriptExecutor) driver).executeScript("arguments[0].remove();", cookieBanner);
+        } catch (NoSuchElementException e) {
+            // Banner not present, continue
+        }
+
+        // Click Unofficial Transcript
+        WebElement transcript = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("a[data-gtm-resources-link='Unofficial Transcript']")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", transcript);
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "07_unofficial_transcript");
 
         // Step 9: Select Graduate in Transcript Level
         wait.until(ExpectedConditions.visibilityOfElementLocated(
