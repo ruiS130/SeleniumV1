@@ -73,13 +73,11 @@ public class Scenario1Test {
         driver.findElement(By.id("idSIButton9")).click();
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "04_after_login_click");
 
-        // Step 3?: Wait for Duo
-//         Thread.sleep(30000); // 30 seconds to approve Duo on your phone
-// Step 4: Wait for Duo approval, then click "No, other people use this device"
+        // Step 3: Wait for Duo approval, then click "No, other people use this device"
         wait = new WebDriverWait(driver, Duration.ofSeconds(60));
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.id("dont-trust-browser-button"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "04_after_duo");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "03a_after_duo");
 
         // Reset wait
         wait = new WebDriverWait(driver, Duration.ofSeconds(20));
@@ -87,20 +85,20 @@ public class Scenario1Test {
         // Click "No" to stay signed in prompt
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.id("idBtn_Back"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "04c_stay_signed_in_no");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "03b_stay_signed_in_no");
 
-        // Step 5: Click Resources tab
+        // Step 4: Click Resources tab
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("[data-testid='link-resources']"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "05_resources_tab");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "04_resources_tab");
 
-        // Step 6: Click Academics, Classes & Registration icon
+        // Step 5: Click Academics, Classes & Registration icon
         WebElement academicsIcon = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.cssSelector("img[src*='academicsclassesregistration']")));
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", academicsIcon);
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "06_academics");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "05_academics");
 
-        // Step 7: Dismiss cookie banner if present
+        // Step 6: Dismiss cookie banner if present
         try {
             WebElement cookieBanner = driver.findElement(By.id("truste-consent-track"));
             ((JavascriptExecutor) driver).executeScript("arguments[0].remove();", cookieBanner);
@@ -112,14 +110,14 @@ public class Scenario1Test {
         WebElement transcript = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.cssSelector("a[data-gtm-resources-link='Unofficial Transcript']")));
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", transcript);
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "07_unofficial_transcript");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "06_unofficial_transcript");
 
-        // Step 9: Select Graduate in Transcript Level
+        // Step 7: Select Graduate in Transcript Level
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.id("levl_id"))); // we may need to update this ID after inspecting
         Select transcriptLevel = new Select(driver.findElement(By.id("levl_id")));
         transcriptLevel.selectByVisibleText("Graduate");
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "09_graduate_selected");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "07_graduate_selected");
 
         // Step 10: Click Submit
         driver.findElement(By.cssSelector("input[type='submit']")).click();
