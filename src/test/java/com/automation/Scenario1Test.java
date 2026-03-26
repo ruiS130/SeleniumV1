@@ -8,6 +8,7 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.TimeoutException;
 import org.testng.Assert;
 import org.testng.annotations.*;
 import java.io.File;
@@ -110,25 +111,64 @@ public class Scenario1Test {
         WebElement transcript = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.cssSelector("a[data-gtm-resources-link='Unofficial Transcript']")));
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", transcript);
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "06_unofficial_transcript");
 
-        // Step 7: Select Graduate in Transcript Level
-        wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.id("levl_id"))); // we may need to update this ID after inspecting
-        Select transcriptLevel = new Select(driver.findElement(By.id("levl_id")));
-        transcriptLevel.selectByVisibleText("Graduate");
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "07_graduate_selected");
+        // Switch to the new tab
+        String originalWindow = driver.getWindowHandle();
+        for (String handle : driver.getWindowHandles()) {
+            if (!handle.equals(originalWindow)) {
+                driver.switchTo().window(handle);
+                break;
+            }
+        }
 
-        // Step 10: Click Submit
-        driver.findElement(By.cssSelector("input[type='submit']")).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "10_after_submit");
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
+        driver.findElement(By.id("username")).sendKeys(testData.get("nuid_username"));
 
-        // Step 11: Print to PDF
+        driver.findElement(By.id("password")).sendKeys(ExcelUtils.decodePassword(testData.get("password")));
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "06_credentials_entered");
+
+        driver.findElement(By.name("_eventId_proceed")).click();
+
+        // Switch into Duo iframe
+        wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("duo_iframe")));
+
+        // Click "Send Me a Push"
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.cssSelector("button.auth-button"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "08b_send_push");
+
+        // Wait for DUO approval, click "No, other people use this device"
+        wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(
+                    By.id("dont-trust-browser-button"))).click();
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "09_duo_transcript");
+        } catch (TimeoutException e) {
+            System.out.println("Trust browser prompt did not appear, skipping...");
+        }
+
+        // Switch back out
+        driver.switchTo().defaultContent();
+// Click "Transcript Level" dropdown and select Graduate
+        wait.until(ExpectedConditions.elementToBeClickable(By.id("select2-placeholder-1"))).click();
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//div[contains(@class,'select2-result') and contains(.,'Graduate')]"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "11_graduate_selected");
+
+// Click "Transcript Type" dropdown and select Audit Transcript
+        wait.until(ExpectedConditions.elementToBeClickable(By.id("select2-placeholder-2"))).click();
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//div[contains(@class,'select2-result') and contains(.,'Audit Transcript')]"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "12_audit_selected");
+
+// Submit (if there's a submit button, click it first)
+// driver.findElement(By.cssSelector("input[type='submit']")).click();
+
+// Wait for transcript to load, then print to PDF
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("body")));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "11_before_print");
+        Thread.sleep(2000); // give it a moment to fully render
         ((JavascriptExecutor) driver).executeScript("window.print();");
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "12_after_print");
-
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "13_after_print");
         // Assert transcript page loaded successfully
         Assert.assertFalse(driver.getTitle().isEmpty(), "Page title should not be empty");
     }
