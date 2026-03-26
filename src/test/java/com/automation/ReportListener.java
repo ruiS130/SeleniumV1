@@ -32,10 +32,13 @@ public class ReportListener implements ITestListener {
 
     @Override
     public void onFinish(ITestContext context) {
+        System.out.println("=== onFinish called, generating report ===");
+        System.out.println("Results collected: " + results.size());
         generateReport(context.getName());
     }
 
     private void generateReport(String suiteName) {
+        new File("test-output").mkdirs();
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
         String fileName = "test-output/TestReport_" + timestamp + ".html";
 

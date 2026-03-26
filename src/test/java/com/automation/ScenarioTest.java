@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-@Listeners
+@Listeners(ReportListener.class)
 public class ScenarioTest {
 
     WebDriver driver;
@@ -164,13 +164,13 @@ public class ScenarioTest {
         wait.until(ExpectedConditions.elementToBeClickable(By.id("select2-placeholder-1"))).click();
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//div[contains(@class,'select2-result') and contains(.,'Graduate')]"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "7a_graduate_selected");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "07a_graduate_selected");
 
         // Click "Transcript Type" dropdown and select Audit Transcript
         wait.until(ExpectedConditions.elementToBeClickable(By.id("select2-placeholder-2"))).click();
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//div[contains(@class,'select2-result') and contains(.,'Audit Transcript')]"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "7b_audit_selected");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "07b_audit_selected");
 
         // Submit (if there's a submit button, click it first)
         // driver.findElement(By.cssSelector("input[type='submit']")).click();
@@ -179,7 +179,7 @@ public class ScenarioTest {
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("body")));
         Thread.sleep(2000); // give it a moment to fully render
         ((JavascriptExecutor) driver).executeScript("window.print();");
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "8_after_print");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "08_after_print");
         // Assert transcript page loaded successfully
         Assert.assertFalse(driver.getTitle().isEmpty(), "Page title should not be empty");
 

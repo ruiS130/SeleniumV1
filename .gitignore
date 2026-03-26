@@ -44,3 +44,6 @@ build/
 
 ###screnshots###
 screenshots/
+
+###test outputs###
+test-output/
