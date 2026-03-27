@@ -12,21 +12,25 @@ public class ReportListener implements ITestListener {
 
     @Override
     public void onTestSuccess(ITestResult result) {
+        long duration = result.getEndMillis() - result.getStartMillis();
         results.add(new String[]{
                 result.getMethod().getMethodName(),
                 "Completed successfully",
                 "Should complete without errors",
-                "PASS"
+                "PASS",
+                duration + "ms"
         });
     }
 
     @Override
     public void onTestFailure(ITestResult result) {
+        long duration = result.getEndMillis() - result.getStartMillis();
         results.add(new String[]{
                 result.getMethod().getMethodName(),
                 result.getThrowable().getMessage(),
                 "Should complete without errors",
-                "FAIL"
+                "FAIL",
+                duration + "ms"
         });
     }
 
@@ -54,7 +58,7 @@ public class ReportListener implements ITestListener {
             pw.println("<h1>Test Execution Report - " + suiteName + "</h1>");
             pw.println("<p>Generated: " + LocalDateTime.now() + "</p>");
             pw.println("<table>");
-            pw.println("<tr><th>Test Scenario Name</th><th>Expected</th><th>Actual</th><th>Pass/Fail</th></tr>");
+            pw.println("<tr><th>Test Scenario</th><th>Expected</th><th>Actual</th><th>Pass/Fail</th><th>Duration</th></tr>");
 
             for (String[] row : results) {
                 pw.println("<tr>");
@@ -62,6 +66,7 @@ public class ReportListener implements ITestListener {
                 pw.println("<td>" + row[2] + "</td>");
                 pw.println("<td>" + row[1] + "</td>");
                 pw.println("<td class='" + row[3] + "'>" + row[3] + "</td>");
+                pw.println("<td>" + row[4] + "</td>");
                 pw.println("</tr>");
             }
 

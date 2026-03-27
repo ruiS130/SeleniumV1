@@ -2,6 +2,7 @@ package com.automation;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -10,11 +11,10 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.TimeoutException;
 import org.testng.Assert;
 import org.testng.annotations.*;
-import java.io.File;
+import java.io.*;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.NoSuchElementException;
 
 @Listeners(ReportListener.class)
 public class ScenarioTest {
@@ -23,8 +23,21 @@ public class ScenarioTest {
     WebDriverWait wait;
     Map<String, String> testData;
     static final String SCENARIO_NAME = "Scenario1_Download_Transcript";
+    static final String SCENARIO_NAME2 = "Scenario2_Add_Event";
 
-    @BeforeClass
+    private long stepStart;
+
+    private void startTimer(String stepName) {
+        stepStart = System.currentTimeMillis();
+        System.out.println("▶ START: " + stepName);
+    }
+
+    private void endTimer(String stepName) {
+        long elapsed = System.currentTimeMillis() - stepStart;
+        System.out.println("✓ END: " + stepName + " (" + elapsed + "ms)");
+    }
+
+    @BeforeMethod
     public void setUp() throws Exception {
         // Clean up old PDFs
         File pdfFolder = new File("screenshots/" + SCENARIO_NAME);
@@ -70,7 +83,9 @@ public class ScenarioTest {
     public void scenario1_downloadTranscript() throws Exception {
 
         // Step 1: Open NEU login page
+        startTimer("Open NEU login page");
         driver.get("https://me.northeastern.edu");
+        startTimer("Open NEU login page");
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "01_before_login");
 
         // Step 2: Enter username
@@ -187,7 +202,113 @@ public class ScenarioTest {
                 "Expected transcript page, got: " + driver.getTitle());
     }
 
-    @AfterClass
+    @Test(priority = 2)
+    public void scenario2_addEvents() throws Exception {
+        // Step 1: Go to Canvas
+        driver.get("https://canvas.northeastern.edu");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "01_canvas_mainpage");
+
+
+        // Step 2: Click "Log in to Canvas"
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.linkText("Log in to Canvas"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "02_before_login");
+
+
+        // Step 3: Microsoft SSO Login
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
+        driver.findElement(By.id("i0116")).sendKeys(testData.get("username"));
+        driver.findElement(By.id("idSIButton9")).click();
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0118")));
+        driver.findElement(By.id("i0118")).sendKeys(ExcelUtils.decodePassword(testData.get("password")));
+        driver.findElement(By.id("idSIButton9")).click();
+
+        // DUO
+        wait = new WebDriverWait(driver, Duration.ofSeconds(60));
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(
+                    By.id("dont-trust-browser-button"))).click();
+        } catch (TimeoutException e) {
+            System.out.println("Trust prompt did not appear, skipping...");
+        }
+
+        // Stay signed in - No
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(
+                    By.id("idBtn_Back"))).click();
+        } catch (TimeoutException e) {
+            System.out.println("Stay signed in prompt did not appear, skipping...");
+        }
+
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "01_canvas_dashboard");
+
+        // Click Calendar in sidebar
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.cssSelector("a[href*='calendar']"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "02_calendar_page");
+
+        List<Map<String, String>> events = ExcelUtils.getEventData("testdata.xlsx", "Events");
+
+        for (int i = 0; i < events.size(); i++) {
+            Map<String, String> event = events.get(i);
+
+            // Click "Create New Event"
+            wait.until(ExpectedConditions.elementToBeClickable(
+                    By.id("create_new_event_link"))).click();
+
+            // Title
+            WebElement titleField = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                    By.cssSelector("[data-testid='edit-calendar-event-form-title']")));
+            titleField.clear();
+            titleField.sendKeys(event.get("title"));
+
+            // Date - clear existing value first
+            WebElement dateField = driver.findElement(
+                    By.cssSelector("[data-testid='edit-calendar-event-form-date']"));
+            dateField.click();
+            dateField.sendKeys(Keys.chord(Keys.COMMAND, "a")); // Use Keys.CONTROL on Windows
+            dateField.sendKeys(event.get("date"));
+            dateField.sendKeys(Keys.TAB); // trigger validation
+
+            // Start Time
+            WebElement startTime = driver.findElement(
+                    By.cssSelector("[data-testid='event-form-start-time']"));
+            startTime.click();
+            startTime.sendKeys(Keys.chord(Keys.COMMAND, "a"));
+            startTime.sendKeys(event.get("start_time"));
+            startTime.sendKeys(Keys.TAB);
+
+            // End Time
+            WebElement endTime = driver.findElement(
+                    By.cssSelector("[data-testid='event-form-end-time']"));
+            endTime.click();
+            endTime.sendKeys(Keys.chord(Keys.COMMAND, "a"));
+            endTime.sendKeys(event.get("end_time"));
+            endTime.sendKeys(Keys.TAB);
+
+            // Location
+            WebElement locationField = driver.findElement(
+                    By.cssSelector("[data-testid='edit-calendar-event-form-location']"));
+            locationField.clear();
+            locationField.sendKeys(event.get("location"));
+
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "event_" + (i + 1) + "_filled");
+
+            // Submit event
+            driver.findElement(By.id("edit-calendar-event-submit-button")).click();
+
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "event_" + (i + 1) + "_created");
+
+            Thread.sleep(1000); // brief pause before next event
+        }
+
+        Assert.assertTrue(driver.getCurrentUrl().contains("calendar"),
+                "Expected calendar page, got: " + driver.getCurrentUrl());
+    }
+
+    @AfterMethod
     public void tearDown() {
         if (driver != null) {
             driver.quit();
