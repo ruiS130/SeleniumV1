@@ -208,19 +208,18 @@ public class ScenarioTest {
         driver.get("https://canvas.northeastern.edu");
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "01_canvas_mainpage");
 
-
         // Step 2: Click "Log in to Canvas"
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.linkText("Log in to Canvas"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "02_before_login");
-
 
         // Step 3: Microsoft SSO Login
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "02_login_page_loaded");
         driver.findElement(By.id("i0116")).sendKeys(testData.get("username"));
         driver.findElement(By.id("idSIButton9")).click();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0118")));
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "03_password_page_loaded");
         driver.findElement(By.id("i0118")).sendKeys(ExcelUtils.decodePassword(testData.get("password")));
         driver.findElement(By.id("idSIButton9")).click();
 
@@ -233,6 +232,8 @@ public class ScenarioTest {
             System.out.println("Trust prompt did not appear, skipping...");
         }
 
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "03a_duo_success");
+
         // Stay signed in - No
         wait = new WebDriverWait(driver, Duration.ofSeconds(20));
         try {
@@ -242,12 +243,13 @@ public class ScenarioTest {
             System.out.println("Stay signed in prompt did not appear, skipping...");
         }
 
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "01_canvas_dashboard");
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.cssSelector("a[href*='calendar']")));
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "04_canvas_homepage");
 
         // Click Calendar in sidebar
-        wait.until(ExpectedConditions.elementToBeClickable(
-                By.cssSelector("a[href*='calendar']"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "02_calendar_page");
+        driver.findElement(By.cssSelector("a[href*='calendar']")).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "05_calendar_page");
 
         List<Map<String, String>> events = ExcelUtils.getEventData("testdata.xlsx", "Events");
 
@@ -257,12 +259,14 @@ public class ScenarioTest {
             // Click "Create New Event"
             wait.until(ExpectedConditions.elementToBeClickable(
                     By.id("create_new_event_link"))).click();
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "06_create_new_event");
 
             // Title
             WebElement titleField = wait.until(ExpectedConditions.visibilityOfElementLocated(
                     By.cssSelector("[data-testid='edit-calendar-event-form-title']")));
             titleField.clear();
             titleField.sendKeys(event.get("title"));
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "07_title_filled_in");
 
             // Date - clear existing value first
             WebElement dateField = driver.findElement(
@@ -279,6 +283,7 @@ public class ScenarioTest {
             startTime.sendKeys(Keys.chord(Keys.COMMAND, "a"));
             startTime.sendKeys(event.get("start_time"));
             startTime.sendKeys(Keys.TAB);
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "08_start_time_filled_in");
 
             // End Time
             WebElement endTime = driver.findElement(
@@ -287,19 +292,18 @@ public class ScenarioTest {
             endTime.sendKeys(Keys.chord(Keys.COMMAND, "a"));
             endTime.sendKeys(event.get("end_time"));
             endTime.sendKeys(Keys.TAB);
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "09_end_time_filled_in");
 
             // Location
             WebElement locationField = driver.findElement(
                     By.cssSelector("[data-testid='edit-calendar-event-form-location']"));
             locationField.clear();
             locationField.sendKeys(event.get("location"));
-
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "event_" + (i + 1) + "_filled");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "10_location_filled_in");
 
             // Submit event
             driver.findElement(By.id("edit-calendar-event-submit-button")).click();
-
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "event_" + (i + 1) + "_created");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "11_submit_event");
 
             Thread.sleep(1000); // brief pause before next event
         }
@@ -312,6 +316,11 @@ public class ScenarioTest {
     public void tearDown() {
         if (driver != null) {
             driver.quit();
+        }
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            // ignore
         }
     }
 }
