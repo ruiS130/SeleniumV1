@@ -9,12 +9,12 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.NoSuchElementException;
 import org.testng.Assert;
 import org.testng.annotations.*;
 import java.io.*;
 import java.time.Duration;
 import java.util.*;
-import java.util.NoSuchElementException;
 
 @Listeners(ReportListener.class)
 public class ScenarioTest {
@@ -25,6 +25,7 @@ public class ScenarioTest {
     static final String SCENARIO_1 = "Scenario1_Download_Transcript";
     static final String SCENARIO_2 = "Scenario2_Add_Event";
     static final String SCENARIO_3 = "Scenario3_Reserve_Seat";
+    static final String SCENARIO_4 = "Scenario4_Download_Dataset";
 
     private long stepStart;
 
@@ -38,14 +39,50 @@ public class ScenarioTest {
         System.out.println("✓ END: " + stepName + " (" + elapsed + "ms)");
     }
 
+    @BeforeClass
+    public void cleanUp() {
+        // Clean up old screenshots
+        String[] scenarios = {SCENARIO_1, SCENARIO_2, SCENARIO_3, SCENARIO_4};
+        for (String scenario : scenarios) {
+            File folder = new File("screenshots/" + scenario);
+            if (folder.exists()) {
+                for (File file : Objects.requireNonNull(folder.listFiles())) {
+                    if (!file.delete()) {
+                        System.out.println("Failed to delete: " + file.getName());
+                    }
+                }
+            }
+        }
+
+        // Keep only the latest 5 test reports
+        File reportFolder = new File("test-output");
+        if (reportFolder.exists()) {
+            File[] reports = reportFolder.listFiles((dir, name) -> name.startsWith("TestReport_") && name.endsWith(".html"));
+            if (reports != null && reports.length > 5) {
+                Arrays.sort(reports, Comparator.comparingLong(File::lastModified));
+                for (int i = 0; i < reports.length - 5; i++) {
+                    if (!reports[i].delete()) {
+                        System.out.println("Failed to delete: " + reports[i].getName());
+                    }
+                }
+            }
+        }
+    }
+
     @BeforeMethod
     public void setUp() throws Exception {
-        // Clean up old PDFs
-        File pdfFolder = new File("screenshots/" + SCENARIO_1);
-        if (pdfFolder.exists()) {
-            for (File file : Objects.requireNonNull(pdfFolder.listFiles())) {
-                if (file.getName().endsWith(".pdf")) {
-                    file.delete();
+        // Keep only the latest 5 test reports
+        File reportFolder = new File("test-output");
+        if (reportFolder.exists()) {
+            File[] reports = reportFolder.listFiles((dir, name) -> name.startsWith("TestReport_") && name.endsWith(".html"));
+            if (reports != null && reports.length > 5) {
+                // Sort by last modified, oldest first
+                Arrays.sort(reports, Comparator.comparingLong(File::lastModified));
+                // Delete oldest ones, keep last 5
+                for (int i = 0; i < reports.length - 5; i++) {
+                    if (!reports[i].delete()) {
+                        System.out.println("Failed to delete: " + reports[i].getName());
+                    }
                 }
             }
         }
@@ -361,6 +398,44 @@ public class ScenarioTest {
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "06_browse_rooms");
 
         Assert.assertFalse(driver.getTitle().isEmpty(), "Page should have loaded but title is empty");
+    }
+
+    @Test(priority = 4)
+    public void scenario4_download_dataset() throws Exception {
+        // Go to Dataset page
+        driver.get("https://onesearch.library.northeastern.edu/discovery/search?vid=01NEU_INST:NU&lang=en");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_4, "01_dataset_mainpage");
+
+        WebElement repoLink = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("a[href*='repository.library.northeastern.edu']")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", repoLink);
+
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_4, "02_DRS_mainpage");
+        // Switch to new tab
+        ArrayList<String> tabs = new ArrayList<>(driver.getWindowHandles());
+        driver.switchTo().window(tabs.get(tabs.size() - 1));
+
+        // Go to Dataset page
+        WebElement datasets = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("a[href='/datasets']")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", datasets);
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_4, "03_DRS_dataset_page");
+
+        // Try to download the zip file
+        try {
+            WebElement downloadLink = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.cssSelector("a[href*='/downloads/neu:ms385324p?datastream_id=content']")));  // or whatever the download link selector is
+            downloadLink.click();
+            Thread.sleep(3000);
+
+            // Check if file actually downloaded
+            File downloadFolder = new File("screenshots/" + SCENARIO_4);
+            File[] zips = downloadFolder.listFiles((dir, name) -> name.endsWith(".zip"));
+            Assert.assertTrue(zips != null && zips.length > 0,
+                    "Zip file should have downloaded but was not found");
+        } catch (TimeoutException e) {
+            Assert.fail("Download link was not found or not clickable - download failed");
+        }
     }
 
     @AfterMethod
