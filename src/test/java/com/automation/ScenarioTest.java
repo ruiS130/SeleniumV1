@@ -2,11 +2,11 @@ package com.automation;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.apache.poi.ss.usermodel.DataFormatter;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.TimeoutException;
 import org.testng.Assert;
@@ -22,8 +22,9 @@ public class ScenarioTest {
     WebDriver driver;
     WebDriverWait wait;
     Map<String, String> testData;
-    static final String SCENARIO_NAME = "Scenario1_Download_Transcript";
-    static final String SCENARIO_NAME2 = "Scenario2_Add_Event";
+    static final String SCENARIO_1 = "Scenario1_Download_Transcript";
+    static final String SCENARIO_2 = "Scenario2_Add_Event";
+    static final String SCENARIO_3 = "Scenario3_Reserve_Seat";
 
     private long stepStart;
 
@@ -40,7 +41,7 @@ public class ScenarioTest {
     @BeforeMethod
     public void setUp() throws Exception {
         // Clean up old PDFs
-        File pdfFolder = new File("screenshots/" + SCENARIO_NAME);
+        File pdfFolder = new File("screenshots/" + SCENARIO_1);
         if (pdfFolder.exists()) {
             for (File file : Objects.requireNonNull(pdfFolder.listFiles())) {
                 if (file.getName().endsWith(".pdf")) {
@@ -67,7 +68,7 @@ public class ScenarioTest {
 
     private static @NonNull ChromeOptions getChromeOptions() {
         Map<String, Object> prefs = new HashMap<>();
-        String pdfFolder = new File("screenshots/" + SCENARIO_NAME).getAbsolutePath();
+        String pdfFolder = new File("screenshots/" + SCENARIO_1).getAbsolutePath();
         new File(pdfFolder).mkdirs();
         prefs.put("savefile.default_directory", pdfFolder);
         prefs.put("printing.print_preview_sticky_settings.appState",
@@ -86,25 +87,25 @@ public class ScenarioTest {
         startTimer("Open NEU login page");
         driver.get("https://me.northeastern.edu");
         startTimer("Open NEU login page");
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "01_before_login");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "01_before_login");
 
         // Step 2: Enter username
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
         driver.findElement(By.id("i0116")).sendKeys(testData.get("username"));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "02_username_entered");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "02_username_entered");
         driver.findElement(By.id("idSIButton9")).click();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0118")));
         driver.findElement(By.id("i0118")).sendKeys(ExcelUtils.decodePassword(testData.get("password")));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "03a_password_entered");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "03a_password_entered");
         driver.findElement(By.id("idSIButton9")).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "03b_after_login_click");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "03b_after_login_click");
 
         // Step 3: Wait for Duo approval, then click "No, other people use this device"
         wait = new WebDriverWait(driver, Duration.ofSeconds(60));
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.id("dont-trust-browser-button"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "03a_after_duo");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "03a_after_duo");
 
         // Reset wait
         wait = new WebDriverWait(driver, Duration.ofSeconds(20));
@@ -112,18 +113,18 @@ public class ScenarioTest {
         // Click "No" to stay signed in prompt
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.id("idBtn_Back"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "03b_stay_signed_in_no");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "03b_stay_signed_in_no");
 
         // Step 4: Click Resources tab
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("[data-testid='link-resources']"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "04_resources_tab");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "04_resources_tab");
 
         // Step 5: Click Academics, Classes & Registration icon
         WebElement academicsIcon = wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.cssSelector("img[src*='academicsclassesregistration']")));
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", academicsIcon);
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "05_academics");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "05_academics");
 
         // Dismiss cookie banner if present
         try {
@@ -151,7 +152,7 @@ public class ScenarioTest {
         driver.findElement(By.id("username")).sendKeys(testData.get("nuid_username"));
 
         driver.findElement(By.id("password")).sendKeys(ExcelUtils.decodePassword(testData.get("password")));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "06a_credentials_entered");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "06a_credentials_entered");
 
         driver.findElement(By.name("_eventId_proceed")).click();
 
@@ -161,14 +162,14 @@ public class ScenarioTest {
         // Click "Send Me a Push"
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("button.auth-button"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "06b_send_push");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "06b_send_push");
 
         // Wait for DUO approval, click "No, other people use this device" (if present)
         wait = new WebDriverWait(driver, Duration.ofSeconds(5));
         try {
             wait.until(ExpectedConditions.elementToBeClickable(
                     By.id("dont-trust-browser-button"))).click();
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "06c_duo_transcript");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "06c_duo_transcript");
         } catch (TimeoutException e) {
             System.out.println("Trust browser prompt did not appear, skipping...");
         }
@@ -179,13 +180,13 @@ public class ScenarioTest {
         wait.until(ExpectedConditions.elementToBeClickable(By.id("select2-placeholder-1"))).click();
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//div[contains(@class,'select2-result') and contains(.,'Graduate')]"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "07a_graduate_selected");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "07a_graduate_selected");
 
         // Click "Transcript Type" dropdown and select Audit Transcript
         wait.until(ExpectedConditions.elementToBeClickable(By.id("select2-placeholder-2"))).click();
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//div[contains(@class,'select2-result') and contains(.,'Audit Transcript')]"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "07b_audit_selected");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "07b_audit_selected");
 
         // Submit (if there's a submit button, click it first)
         // driver.findElement(By.cssSelector("input[type='submit']")).click();
@@ -194,7 +195,7 @@ public class ScenarioTest {
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("body")));
         Thread.sleep(2000); // give it a moment to fully render
         ((JavascriptExecutor) driver).executeScript("window.print();");
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME, "08_after_print");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "08_after_print");
         // Assert transcript page loaded successfully
         Assert.assertFalse(driver.getTitle().isEmpty(), "Page title should not be empty");
 
@@ -206,7 +207,7 @@ public class ScenarioTest {
     public void scenario2_addEvents() throws Exception {
         // Step 1: Go to Canvas
         driver.get("https://canvas.northeastern.edu");
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "01_canvas_mainpage");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "01_canvas_mainpage");
 
         // Step 2: Click "Log in to Canvas"
         wait.until(ExpectedConditions.elementToBeClickable(
@@ -214,12 +215,12 @@ public class ScenarioTest {
 
         // Step 3: Microsoft SSO Login
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "02_login_page_loaded");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "02_login_page_loaded");
         driver.findElement(By.id("i0116")).sendKeys(testData.get("username"));
         driver.findElement(By.id("idSIButton9")).click();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0118")));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "03_password_page_loaded");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "03_password_page_loaded");
         driver.findElement(By.id("i0118")).sendKeys(ExcelUtils.decodePassword(testData.get("password")));
         driver.findElement(By.id("idSIButton9")).click();
 
@@ -232,7 +233,7 @@ public class ScenarioTest {
             System.out.println("Trust prompt did not appear, skipping...");
         }
 
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "03a_duo_success");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "03a_duo_success");
 
         // Stay signed in - No
         wait = new WebDriverWait(driver, Duration.ofSeconds(20));
@@ -245,11 +246,11 @@ public class ScenarioTest {
 
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.cssSelector("a[href*='calendar']")));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "04_canvas_homepage");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "04_canvas_homepage");
 
         // Click Calendar in sidebar
         driver.findElement(By.cssSelector("a[href*='calendar']")).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "05_calendar_page");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "05_calendar_page");
 
         List<Map<String, String>> events = ExcelUtils.getEventData("testdata.xlsx", "Events");
 
@@ -259,14 +260,14 @@ public class ScenarioTest {
             // Click "Create New Event"
             wait.until(ExpectedConditions.elementToBeClickable(
                     By.id("create_new_event_link"))).click();
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "06_create_new_event");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "06_create_new_event");
 
             // Title
             WebElement titleField = wait.until(ExpectedConditions.visibilityOfElementLocated(
                     By.cssSelector("[data-testid='edit-calendar-event-form-title']")));
             titleField.clear();
             titleField.sendKeys(event.get("title"));
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "07_title_filled_in");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "07_title_filled_in");
 
             // Date - clear existing value first
             WebElement dateField = driver.findElement(
@@ -283,7 +284,7 @@ public class ScenarioTest {
             startTime.sendKeys(Keys.chord(Keys.COMMAND, "a"));
             startTime.sendKeys(event.get("start_time"));
             startTime.sendKeys(Keys.TAB);
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "08_start_time_filled_in");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "08_start_time_filled_in");
 
             // End Time
             WebElement endTime = driver.findElement(
@@ -292,24 +293,74 @@ public class ScenarioTest {
             endTime.sendKeys(Keys.chord(Keys.COMMAND, "a"));
             endTime.sendKeys(event.get("end_time"));
             endTime.sendKeys(Keys.TAB);
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "09_end_time_filled_in");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "09_end_time_filled_in");
 
             // Location
             WebElement locationField = driver.findElement(
                     By.cssSelector("[data-testid='edit-calendar-event-form-location']"));
             locationField.clear();
             locationField.sendKeys(event.get("location"));
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "10_location_filled_in");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "10_location_filled_in");
 
             // Submit event
             driver.findElement(By.id("edit-calendar-event-submit-button")).click();
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_NAME2, "11_submit_event");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "11_submit_event");
 
             Thread.sleep(1000); // brief pause before next event
         }
 
         Assert.assertTrue(driver.getCurrentUrl().contains("calendar"),
                 "Expected calendar page, got: " + driver.getCurrentUrl());
+    }
+
+    @Test(priority = 3)
+    public void scenario3_reserveSeat() throws Exception {
+        // Go to library main page
+        driver.get("https://library.northeastern.edu/");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "01_library_mainpage");
+
+        // Accept cookies
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("accept-selected")));
+        driver.findElement(By.id("accept-selected")).click();
+
+        // Reserve a room
+        WebElement reserveRoom = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.linkText("Reserve A Study Room")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", reserveRoom);
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "02_reserve_room");
+
+        // Select Boston Campus
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.cssSelector("img[alt = 'Boston Skyline Silhouette']"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "03_campus_selected");
+
+        // Select Book Room
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.cssSelector("a[href*='https://northeastern.libcal.com/reserve/spaces/studyspace']"))).click();
+
+        // Swtich to the new tab
+        ArrayList<String> tabs = new ArrayList<>(driver.getWindowHandles());
+        driver.switchTo().window(tabs.get(tabs.size() - 1));
+
+        // Change filter
+        WebElement dropdown = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("gid")));
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "04_check_availability");
+        Select roomType = new Select(dropdown);
+        roomType.selectByVisibleText("Individual Study");
+
+        WebElement dropdown2 = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("capacity")));
+        Select capacity = new Select(dropdown2);
+        capacity.selectByVisibleText("Space For 1-4 people");
+
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "05_filter_applied");
+
+        // Scroll to bottom
+        ((JavascriptExecutor) driver).executeScript(
+                "window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});");
+        Thread.sleep(3000);
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "06_browse_rooms");
+
+        Assert.assertFalse(driver.getTitle().isEmpty(), "Page should have loaded but title is empty");
     }
 
     @AfterMethod
