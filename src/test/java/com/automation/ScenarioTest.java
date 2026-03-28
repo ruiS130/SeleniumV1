@@ -26,6 +26,7 @@ public class ScenarioTest {
     static final String SCENARIO_2 = "Scenario2_Add_Event";
     static final String SCENARIO_3 = "Scenario3_Reserve_Seat";
     static final String SCENARIO_4 = "Scenario4_Download_Dataset";
+    static final String SCENARIO_5 = "Scenario5_Update_Academic_Calender";
 
     private long stepStart;
 
@@ -436,6 +437,98 @@ public class ScenarioTest {
         } catch (TimeoutException e) {
             Assert.fail("Download link was not found or not clickable - download failed");
         }
+    }
+
+    @Test(priority = 5)
+    public void scenario5_update_academic_calender() throws Exception {
+        // Step 1: Go to Student Hub
+        driver.get("https://student.me.northeastern.edu");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "01_before_login");
+
+        // Step 2: Enter username
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
+        driver.findElement(By.id("i0116")).sendKeys(testData.get("username"));
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "02_username_entered");
+        driver.findElement(By.id("idSIButton9")).click();
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0118")));
+        driver.findElement(By.id("i0118")).sendKeys(ExcelUtils.decodePassword(testData.get("password")));
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "03a_password_entered");
+        driver.findElement(By.id("idSIButton9")).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "03b_after_login_click");
+
+        // Step 3: Wait for Duo approval, then click "No, other people use this device"
+        wait = new WebDriverWait(driver, Duration.ofSeconds(60));
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("dont-trust-browser-button"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "03c_after_duo");
+
+        // Reset wait
+        wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+
+        // Click "No" to stay signed in prompt
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.id("idBtn_Back"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "03b_stay_signed_in_no");
+
+        // Step 4: Click Resources tab
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.cssSelector("[data-testid='link-resources']"))).click();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "04_resources_tab");
+
+        // Step 5: Click Academics, Classes & Registration icon
+        WebElement academicsIcon = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("img[src*='academicsclassesregistration']")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", academicsIcon);
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "05_academics");
+
+        // Dismiss cookie banner if present
+        try {
+            WebElement cookieBanner = driver.findElement(By.id("truste-consent-track"));
+            ((JavascriptExecutor) driver).executeScript("arguments[0].remove();", cookieBanner);
+        } catch (NoSuchElementException e) {
+            // Banner not present, continue
+        }
+
+        // Step 6: Click Academic Calendar
+        WebElement academicCal = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("a[data-gtm-resources-link='Academic Calendar']")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", academicCal);
+
+        // Switch to new tab
+        ArrayList<String> tabs = new ArrayList<>(driver.getWindowHandles());
+        driver.switchTo().window(tabs.get(tabs.size() - 1));
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "06_academic_calender");
+
+        // Step 7: Click Academic Calendar link
+        WebElement acadCal = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("a[href*='article/academic-calendar']")));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", acadCal);
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "07_academic_calender2");
+
+        // Switch into the calendar filter iframe (index 7)
+        driver.switchTo().defaultContent();
+        Thread.sleep(5000); // let all iframes load
+        java.util.List<WebElement> iframes = driver.findElements(By.cssSelector("iframe[id^='trumba.spud']"));
+        driver.switchTo().frame(iframes.get(7));
+
+// Uncheck all four
+        for (int i = 0; i < 4; i++) {
+            WebElement checkbox = wait.until(ExpectedConditions.presenceOfElementLocated(
+                    By.id("mixItem" + i)));
+            if (checkbox.isSelected()) {
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", checkbox);
+            }
+        }
+
+// Assert all unchecked
+        for (int i = 0; i < 4; i++) {
+            WebElement checkbox = driver.findElement(By.id("mixItem" + i));
+            Assert.assertFalse(checkbox.isSelected(),
+                    "Checkbox mixItem" + i + " should be unchecked but is still checked");
+        }
+        driver.switchTo().defaultContent();
+        Thread.sleep(2000);
     }
 
     @AfterMethod
