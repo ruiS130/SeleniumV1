@@ -43,7 +43,7 @@ public class ScenarioTest {
     @BeforeClass
     public void cleanUp() {
         // Clean up old screenshots
-        String[] scenarios = {SCENARIO_1, SCENARIO_2, SCENARIO_3, SCENARIO_4};
+        String[] scenarios = {SCENARIO_1, SCENARIO_2, SCENARIO_3, SCENARIO_4, SCENARIO_5};
         for (String scenario : scenarios) {
             File folder = new File("screenshots/" + scenario);
             if (folder.exists()) {
