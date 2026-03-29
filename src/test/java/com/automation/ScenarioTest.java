@@ -521,6 +521,8 @@ public class ScenarioTest {
             }
         }
 
+        // TODO: need to modify screenshot locations, so no white screens
+
         // Assert all unchecked
         for (int i = 0; i < 4; i++) {
             WebElement checkbox = driver.findElement(By.id("mixItem" + i));

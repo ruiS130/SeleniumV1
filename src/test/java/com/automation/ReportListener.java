@@ -87,7 +87,7 @@ public class ReportListener implements ITestListener {
         if (methodName.contains("scenario2")) return "Scenario2_Add_Event";
         if (methodName.contains("scenario3")) return "Scenario3_Reserve_Seat";
         if (methodName.contains("scenario4")) return "Scenario4_Download_Dataset";
-        if (methodName.contains("scenario5")) return "Scenario5_Update_Academic_Calendar";
+        if (methodName.contains("scenario5")) return "Scenario5_Update_Academic_Calender";
         return methodName;
     }
 
