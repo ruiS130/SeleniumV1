@@ -512,7 +512,7 @@ public class ScenarioTest {
         java.util.List<WebElement> iframes = driver.findElements(By.cssSelector("iframe[id^='trumba.spud']"));
         driver.switchTo().frame(iframes.get(7));
 
-// Uncheck all four
+        // Uncheck all four
         for (int i = 0; i < 4; i++) {
             WebElement checkbox = wait.until(ExpectedConditions.presenceOfElementLocated(
                     By.id("mixItem" + i)));
@@ -521,7 +521,7 @@ public class ScenarioTest {
             }
         }
 
-// Assert all unchecked
+        // Assert all unchecked
         for (int i = 0; i < 4; i++) {
             WebElement checkbox = driver.findElement(By.id("mixItem" + i));
             Assert.assertFalse(checkbox.isSelected(),
