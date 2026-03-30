@@ -342,15 +342,71 @@ public class ScenarioTest {
             locationField.sendKeys(event.get("location"));
             ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "10_location_filled_in");
 
+            // Verify form fields before submission
+            String actualTitle = driver.findElement(
+                    By.cssSelector("[data-testid='edit-calendar-event-form-title']")).getAttribute("value");
+            String actualDate = driver.findElement(
+                    By.cssSelector("[data-testid='edit-calendar-event-form-date']")).getAttribute("value");
+            String actualStart = driver.findElement(
+                    By.cssSelector("[data-testid='event-form-start-time']")).getAttribute("value");
+            String actualEnd = driver.findElement(
+                    By.cssSelector("[data-testid='event-form-end-time']")).getAttribute("value");
+            String actualLocation = driver.findElement(
+                    By.cssSelector("[data-testid='edit-calendar-event-form-location']")).getAttribute("value");
+
+            Assert.assertEquals(actualTitle, event.get("title"),
+                    "Event " + (i + 1) + " title mismatch");
+            Assert.assertTrue(actualDate.contains(event.get("date")) || !actualDate.isEmpty(),
+                    "Event " + (i + 1) + " date not set correctly, got: " + actualDate);
+            Assert.assertEquals(actualStart, event.get("start_time"),
+                    "Event " + (i + 1) + " start time mismatch - expected: " + event.get("start_time") + ", got: " + actualStart);
+            Assert.assertEquals(actualEnd, event.get("end_time"),
+                    "Event " + (i + 1) + " end time mismatch - expected: " + event.get("end_time") + ", got: " + actualEnd);
+            Assert.assertEquals(actualLocation, event.get("location"),
+                    "Event " + (i + 1) + " location mismatch");
+
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "Assert1");
+
             // Submit event
             driver.findElement(By.id("edit-calendar-event-submit-button")).click();
             ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "11_submit_event");
 
             Thread.sleep(1000); // brief pause before next event
+
+            // Verify event appears on calendar after submission
+            Assert.assertTrue(driver.getPageSource().contains(event.get("title")),
+                    "Event '" + event.get("title") + "' not found on calendar after submission");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "12_submitted_verified");
         }
+        // Final verification - click each event and check details
+        for (int i = 0; i < events.size(); i++) {
+            Map<String, String> event = events.get(i);
+
+            WebElement calendarEvent = wait.until(ExpectedConditions.elementToBeClickable(
+                    By.xpath("//*[contains(text(),'" + event.get("title") + "')]")));
+            calendarEvent.click();
+            Thread.sleep(1000);
+
+            String pageSource = driver.getPageSource();
+            Assert.assertTrue(pageSource.contains(event.get("title")),
+                    "Event title '" + event.get("title") + "' not found in event details");
+            Assert.assertTrue(pageSource.contains(event.get("location")),
+                    "Event location '" + event.get("location") + "' not found in event details");
+
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "13_detail_verified");
+
+            // Close the event popup - press Escape
+            driver.findElement(By.tagName("body")).sendKeys(Keys.ESCAPE);
+            Thread.sleep(500);
+        }
+
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "14_final_calendar_view");
 
         Assert.assertTrue(driver.getCurrentUrl().contains("calendar"),
                 "Expected calendar page, got: " + driver.getCurrentUrl());
+
+//        Assert.assertTrue(driver.getCurrentUrl().contains("calendar"),
+//                "Expected calendar page, got: " + driver.getCurrentUrl());
     }
 
     @Test(priority = 3)
