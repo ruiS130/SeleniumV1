@@ -316,31 +316,39 @@ public class ScenarioTest {
             dateField.sendKeys(Keys.chord(selectAllKey, "a"));
             dateField.sendKeys(event.get("date"));
             dateField.sendKeys(Keys.TAB); // trigger validation
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "08_date_filled_in");
+
 
             // Start Time
             WebElement startTime = driver.findElement(
                     By.cssSelector("[data-testid='event-form-start-time']"));
+            ((JavascriptExecutor) driver).executeScript(
+                    "arguments[0].value = ''; arguments[0].dispatchEvent(new Event('input'));", startTime);
             startTime.click();
-            startTime.sendKeys(Keys.chord(selectAllKey, "a"));
             startTime.sendKeys(event.get("start_time"));
+            Thread.sleep(500);
             startTime.sendKeys(Keys.TAB);
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "08_start_time_filled_in");
+            Thread.sleep(1000); // wait for Canvas to recalculate end time
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "09a_start_time_filled_in");
 
-            // End Time
+            // End Time - clear AFTER start time has settled
             WebElement endTime = driver.findElement(
                     By.cssSelector("[data-testid='event-form-end-time']"));
             endTime.click();
             endTime.sendKeys(Keys.chord(selectAllKey, "a"));
+            endTime.sendKeys(Keys.BACK_SPACE);
+            Thread.sleep(300);
             endTime.sendKeys(event.get("end_time"));
+            Thread.sleep(500);
             endTime.sendKeys(Keys.TAB);
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "09_end_time_filled_in");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "09b_end_time_filled_in");
 
             // Location
             WebElement locationField = driver.findElement(
                     By.cssSelector("[data-testid='edit-calendar-event-form-location']"));
             locationField.clear();
             locationField.sendKeys(event.get("location"));
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "10_location_filled_in");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "10a_location_filled_in");
 
             // Verify form fields before submission
             String actualTitle = driver.findElement(
@@ -365,7 +373,7 @@ public class ScenarioTest {
             Assert.assertEquals(actualLocation, event.get("location"),
                     "Event " + (i + 1) + " location mismatch");
 
-            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "Assert1");
+            ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "10b_assertion");
 
             // Submit event
             driver.findElement(By.id("edit-calendar-event-submit-button")).click();
