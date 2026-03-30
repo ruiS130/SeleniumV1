@@ -171,7 +171,8 @@ public class ReportListener implements ITestListener {
             pw.println("<div class='tabs'>");
             pw.println("<div class='tab active' onclick='showTab(\"overview\")'>Overview</div>");
             for (int i = 0; i < results.size(); i++) {
-                pw.println("<div class='tab' onclick='showTab(\"scenario" + i + "\")'>Scenario " + (i + 1) + "</div>");
+                String methodName = results.get(i)[0];
+                pw.println("<div class='tab' onclick='showTab(\"scenario" + i + "\")'>" + methodName + "</div>");
             }
             pw.println("</div>");
 
@@ -249,6 +250,13 @@ public class ReportListener implements ITestListener {
 
             pw.println("</body></html>");
             System.out.println("Report generated: " + fileName);
+
+            // Auto-open in browser
+            try {
+                java.awt.Desktop.getDesktop().browse(new File(fileName).toURI());
+            } catch (Exception e) {
+                System.out.println("Could not open report automatically: " + e.getMessage());
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

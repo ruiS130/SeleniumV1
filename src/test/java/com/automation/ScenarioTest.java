@@ -122,36 +122,36 @@ public class ScenarioTest {
     public void scenario1_downloadTranscript() throws Exception {
 
         // Step 1: Open NEU login page
-        startTimer("Open NEU login page");
         driver.get("https://me.northeastern.edu");
-        startTimer("Open NEU login page");
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "01_before_login");
 
         // Step 2: Enter username
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
         driver.findElement(By.id("i0116")).sendKeys(testData.get("username"));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "02_username_entered");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "02a_username_entered");
         driver.findElement(By.id("idSIButton9")).click();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0118")));
         driver.findElement(By.id("i0118")).sendKeys(ExcelUtils.decodePassword(testData.get("password")));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "03a_password_entered");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "02b_password_entered");
         driver.findElement(By.id("idSIButton9")).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "03b_after_login_click");
 
         // Step 3: Wait for Duo approval, then click "No, other people use this device"
         wait = new WebDriverWait(driver, Duration.ofSeconds(60));
         wait.until(ExpectedConditions.elementToBeClickable(
-                By.id("dont-trust-browser-button"))).click();
+                By.id("dont-trust-browser-button")));
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "03a_after_duo");
+        driver.findElement(By.id("dont-trust-browser-button")).click();
 
         // Reset wait
         wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 
         // Click "No" to stay signed in prompt
         wait.until(ExpectedConditions.elementToBeClickable(
-                By.id("idBtn_Back"))).click();
+                By.id("idBtn_Back")));
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "03b_stay_signed_in_no");
+        driver.findElement(By.id("idBtn_Back")).click();
 
         // Step 4: Click Resources tab
         wait.until(ExpectedConditions.elementToBeClickable(
@@ -405,6 +405,8 @@ public class ScenarioTest {
     public void scenario4_download_dataset() throws Exception {
         // Go to Dataset page
         driver.get("https://onesearch.library.northeastern.edu/discovery/search?vid=01NEU_INST:NU&lang=en");
+        wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("a[href*='repository.library.northeastern.edu']")));
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_4, "01_dataset_mainpage");
 
         WebElement repoLink = wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -443,33 +445,34 @@ public class ScenarioTest {
     public void scenario5_update_academic_calender() throws Exception {
         // Step 1: Go to Student Hub
         driver.get("https://student.me.northeastern.edu");
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "01_before_login");
 
         // Step 2: Enter username
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0116")));
         driver.findElement(By.id("i0116")).sendKeys(testData.get("username"));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "02_username_entered");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "02a_username_entered");
         driver.findElement(By.id("idSIButton9")).click();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("i0118")));
         driver.findElement(By.id("i0118")).sendKeys(ExcelUtils.decodePassword(testData.get("password")));
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "03a_password_entered");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "02b_password_entered");
         driver.findElement(By.id("idSIButton9")).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "03b_after_login_click");
 
         // Step 3: Wait for Duo approval, then click "No, other people use this device"
         wait = new WebDriverWait(driver, Duration.ofSeconds(60));
         wait.until(ExpectedConditions.elementToBeClickable(
                 By.id("dont-trust-browser-button"))).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "03c_after_duo");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "03a_after_duo");
 
         // Reset wait
         wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 
         // Click "No" to stay signed in prompt
         wait.until(ExpectedConditions.elementToBeClickable(
-                By.id("idBtn_Back"))).click();
+                By.id("idBtn_Back")));
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "03b_stay_signed_in_no");
+        driver.findElement(By.id("idBtn_Back")).click();
 
         // Step 4: Click Resources tab
         wait.until(ExpectedConditions.elementToBeClickable(
@@ -520,8 +523,6 @@ public class ScenarioTest {
                 ((JavascriptExecutor) driver).executeScript("arguments[0].click();", checkbox);
             }
         }
-
-        // TODO: need to modify screenshot locations, so no white screens
 
         // Assert all unchecked
         for (int i = 0; i < 4; i++) {
