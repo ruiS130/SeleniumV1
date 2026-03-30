@@ -290,7 +290,16 @@ public class ScenarioTest {
 
         // Click Calendar in sidebar
         driver.findElement(By.cssSelector("a[href*='calendar']")).click();
-        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "05_calendar_page");
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "05a_calendar_page");
+
+        // Make sure calendar checkbox is checked
+        WebElement calendarCheckbox = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector("span.context-list-toggle-box[role='checkbox']")));
+        String isChecked = calendarCheckbox.getAttribute("aria-checked");
+        if (!"true".equals(isChecked)) {
+            calendarCheckbox.click();
+        }
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "05b_calendar_checkbox_verified");
 
         List<Map<String, String>> events = ExcelUtils.getEventData("testdata.xlsx", "Events");
 
@@ -451,10 +460,24 @@ public class ScenarioTest {
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "04_check_availability");
         Select roomType = new Select(dropdown);
         roomType.selectByVisibleText("Individual Study");
+        Thread.sleep(2000); // wait for page to reload
+
+// Re-find and verify room type
+        dropdown = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("gid")));
+        roomType = new Select(dropdown);
+        Assert.assertEquals(roomType.getFirstSelectedOption().getText().trim(), "Individual Study",
+                "Room type should be 'Individual Study', got: " + roomType.getFirstSelectedOption().getText());
 
         WebElement dropdown2 = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("capacity")));
         Select capacity = new Select(dropdown2);
         capacity.selectByVisibleText("Space For 1-4 people");
+        Thread.sleep(2000); // wait for page to reload
+
+        // Re-find and verify capacity
+        dropdown2 = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("capacity")));
+        capacity = new Select(dropdown2);
+        Assert.assertEquals(capacity.getFirstSelectedOption().getText().trim(), "Space For 1-4 people",
+                "Capacity should be 'Space For 1-4 people', got: " + capacity.getFirstSelectedOption().getText());
 
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "05_filter_applied");
 
