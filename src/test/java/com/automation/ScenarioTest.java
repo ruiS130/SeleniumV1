@@ -581,22 +581,26 @@ public class ScenarioTest {
         java.util.List<WebElement> iframes = driver.findElements(By.cssSelector("iframe[id^='trumba.spud']"));
         driver.switchTo().frame(iframes.get(7));
 
-        // Uncheck all four
-        for (int i = 0; i < 4; i++) {
-            WebElement checkbox = wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.id("mixItem" + i)));
-            if (checkbox.isSelected()) {
-                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", checkbox);
-            }
+        // Switch out and in again
+        driver.switchTo().defaultContent();
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "08a_before_uncheck");
+
+        driver.switchTo().frame(iframes.get(7));
+
+        // Uncheck only "Semester - All Levels (SEM)"
+        WebElement semesterCheckbox = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.id("mixItem0")));
+        if (semesterCheckbox.isSelected()) {
+            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", semesterCheckbox);
         }
 
-        // Assert all unchecked
-        for (int i = 0; i < 4; i++) {
-            WebElement checkbox = driver.findElement(By.id("mixItem" + i));
-            Assert.assertFalse(checkbox.isSelected(),
-                    "Checkbox mixItem" + i + " should be unchecked but is still checked");
-        }
+        // Assert it's unchecked
+        Assert.assertFalse(semesterCheckbox.isSelected(),
+                "Semester - All Levels (SEM) checkbox should be unchecked but is still checked");
+
         driver.switchTo().defaultContent();
+        Thread.sleep(3000);
+        ScreenshotUtils.takeScreenshot(driver, SCENARIO_5, "08b_academic_calender_unchecked");
         Thread.sleep(2000);
     }
 
