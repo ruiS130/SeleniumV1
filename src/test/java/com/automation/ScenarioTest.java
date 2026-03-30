@@ -92,13 +92,13 @@ public class ScenarioTest {
 
         // Read credentials from Excel
         testData = ExcelUtils.getTestData("testdata.xlsx", "Sheet1");
-//        System.out.println("Decoded password: [" + ExcelUtils.decodePassword(testData.get("password")) + "]");
+        //System.out.println("Decoded password: [" + ExcelUtils.decodePassword(testData.get("password")) + "]");
 
         // Configure Chrome to auto-save PDFs instead of showing print dialog
         ChromeOptions options = getChromeOptions();
         options.addArguments("--kiosk-printing"); // auto-confirm print dialog
 
-//        WebDriverManager.chromedriver().setup();
+        // WebDriverManager.chromedriver().setup();
         WebDriverManager.chromedriver().clearDriverCache().setup();
 
         driver = new ChromeDriver(options);
@@ -217,15 +217,17 @@ public class ScenarioTest {
         // Switch back out
         driver.switchTo().defaultContent();
         // Step 7: Click "Transcript Level" dropdown and select Graduate
+        String level = testData.get("transcript_level");
         wait.until(ExpectedConditions.elementToBeClickable(By.id("select2-placeholder-1"))).click();
         wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//div[contains(@class,'select2-result') and contains(.,'Graduate')]"))).click();
+                By.xpath("//div[contains(@class,'select2-result') and contains(.,'" + level + "')]"))).click();
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "07a_graduate_selected");
 
         // Click "Transcript Type" dropdown and select Audit Transcript
+        String type = testData.get("transcript_type");
         wait.until(ExpectedConditions.elementToBeClickable(By.id("select2-placeholder-2"))).click();
         wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//div[contains(@class,'select2-result') and contains(.,'Audit Transcript')]"))).click();
+                By.xpath("//div[contains(@class,'select2-result') and contains(.,'" + type + "')]"))).click();
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_1, "07b_audit_selected");
 
         // Submit (if there's a submit button, click it first)
@@ -428,6 +430,9 @@ public class ScenarioTest {
 
     @Test(priority = 3)
     public void scenario3_reserveSeat() throws Exception {
+        // Read reservation data from Excel
+        Map<String, String> reservation = ExcelUtils.getTestData("testdata.xlsx", "Reservation");
+
         // Go to library main page
         driver.get("https://library.northeastern.edu/");
         ScreenshotUtils.takeScreenshot(driver, SCENARIO_3, "01_library_mainpage");
@@ -462,15 +467,15 @@ public class ScenarioTest {
         roomType.selectByVisibleText("Individual Study");
         Thread.sleep(2000); // wait for page to reload
 
-// Re-find and verify room type
+        // Re-find and verify room type
         dropdown = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("gid")));
         roomType = new Select(dropdown);
-        Assert.assertEquals(roomType.getFirstSelectedOption().getText().trim(), "Individual Study",
-                "Room type should be 'Individual Study', got: " + roomType.getFirstSelectedOption().getText());
+        Assert.assertEquals(roomType.getFirstSelectedOption().getText().trim(), reservation.get("room_type"),
+                "Room type mismatch, got: " + roomType.getFirstSelectedOption().getText());
 
         WebElement dropdown2 = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("capacity")));
         Select capacity = new Select(dropdown2);
-        capacity.selectByVisibleText("Space For 1-4 people");
+        capacity.selectByVisibleText(reservation.get("capacity"));
         Thread.sleep(2000); // wait for page to reload
 
         // Re-find and verify capacity
@@ -492,6 +497,8 @@ public class ScenarioTest {
 
     @Test(priority = 4)
     public void scenario4_download_dataset() throws Exception {
+        Map<String, String> datasetData = ExcelUtils.getTestData("testdata.xlsx", "Datasets");
+
         // Go to Dataset page
         driver.get("https://onesearch.library.northeastern.edu/discovery/search?vid=01NEU_INST:NU&lang=en");
         wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -516,7 +523,7 @@ public class ScenarioTest {
         // Try to download the zip file
         try {
             WebElement downloadLink = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.cssSelector("a[href*='/downloads/neu:ms385324p?datastream_id=content']")));  // or whatever the download link selector is
+                    By.cssSelector("a[href*='" + datasetData.get("download_url") + "']")));
             downloadLink.click();
             Thread.sleep(3000);
 
