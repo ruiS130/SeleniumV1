@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -22,6 +23,7 @@ public class ScenarioTest {
     WebDriver driver;
     WebDriverWait wait;
     Map<String, String> testData;
+    Keys selectAllKey = System.getProperty("os.name").toLowerCase().contains("mac") ? Keys.COMMAND : Keys.CONTROL;
     static final String SCENARIO_1 = "Scenario1_Download_Transcript";
     static final String SCENARIO_2 = "Scenario2_Add_Event";
     static final String SCENARIO_3 = "Scenario3_Reserve_Seat";
@@ -311,7 +313,7 @@ public class ScenarioTest {
             WebElement dateField = driver.findElement(
                     By.cssSelector("[data-testid='edit-calendar-event-form-date']"));
             dateField.click();
-            dateField.sendKeys(Keys.chord(Keys.COMMAND, "a")); // Use Keys.CONTROL on Windows
+            dateField.sendKeys(Keys.chord(selectAllKey, "a"));
             dateField.sendKeys(event.get("date"));
             dateField.sendKeys(Keys.TAB); // trigger validation
 
@@ -319,7 +321,7 @@ public class ScenarioTest {
             WebElement startTime = driver.findElement(
                     By.cssSelector("[data-testid='event-form-start-time']"));
             startTime.click();
-            startTime.sendKeys(Keys.chord(Keys.COMMAND, "a"));
+            startTime.sendKeys(Keys.chord(selectAllKey, "a"));
             startTime.sendKeys(event.get("start_time"));
             startTime.sendKeys(Keys.TAB);
             ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "08_start_time_filled_in");
@@ -328,7 +330,7 @@ public class ScenarioTest {
             WebElement endTime = driver.findElement(
                     By.cssSelector("[data-testid='event-form-end-time']"));
             endTime.click();
-            endTime.sendKeys(Keys.chord(Keys.COMMAND, "a"));
+            endTime.sendKeys(Keys.chord(selectAllKey, "a"));
             endTime.sendKeys(event.get("end_time"));
             endTime.sendKeys(Keys.TAB);
             ScreenshotUtils.takeScreenshot(driver, SCENARIO_2, "09_end_time_filled_in");
